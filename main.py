@@ -68,7 +68,7 @@ def send_message():
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>XMARTY AYUSH KING</title>
+	<title>ANISH XD</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 	<style>
 		body{
@@ -100,7 +100,7 @@ def send_message():
 </head>
 <body>
 	<header class="header mt-4">
-    <h1 class="mb-3">𝐗𝐌𝟗𝐑𝐓𝐘 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 </h1> 𝐎𝐅𝐅𝐋𝟏𝐍𝟑 𝐒𝟑𝐑𝐕𝟑𝐑 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄
+    <h1 class="mb-3"> 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 </h1> 𝐎𝐅𝐅𝐋𝟏𝐍𝟑 𝐒𝟑𝐑𝐕𝟑𝐑 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄
 		<h1 class="mt-3">𝐎𝐖𝐍𝐄𝐑 :: 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄 </h1>
 	</header>
 
@@ -132,7 +132,7 @@ def send_message():
 	<footer class="footer">
 		<p>&copy; 2023 Musharib Rulex. All Rights Reserved.</p>
     <p>Convo/Inbox Loader Tool</p>
-		<p>Made with 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄 by <a href="https://github.com/Musharibch</a></p>
+		<p>Made with 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄 by <a href="ANISH HERE</a></p>
 	</footer>
 </body>
   </html>
