@@ -53,7 +53,7 @@ def send_message():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XM9RTY AYUSH K1NG</title>
+  <title>𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -106,7 +106,7 @@ def send_message():
 <body>
   <!-- ANISH XD-->
   <div class="ANISH-XD">
-    <p>XM9RTY ANISH HERE</p>
+    <p> ANISH HERE</p>
   </div>
 
  <style>
@@ -243,8 +243,8 @@ def send_message():
 <body> </div> <div class="containor">
     <!-- Your text box content here -->
     <footer class="footer">
-      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝐗𝐌𝟗𝐑𝐓𝐘 𝐀𝐘𝐔𝐒𝐇 𝐊𝟏𝐍𝐆</span>.</span></p>
-      <p><span class="boxed-text2"><span class="color-span">𝐌𝟗𝐒𝐓𝟑𝐑 𝐓𝟏𝐂𝐊𝟑𝐑</span></span></p>
+      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</span>.</span></p>
+      <p><span class="boxed-text2"><span class="color-span">𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</span></span></p>
   </p>
     </footer>
     </div>
