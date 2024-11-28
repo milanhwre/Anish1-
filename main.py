@@ -104,9 +104,9 @@ def send_message():
   </style>
 </head>
 <body>
-  <!-- AYUSH KING -->
-  <div class="AYUSH-KING">
-    <p>XM9RTY AYUSH K1NG</p>
+  <!-- ANISH XD-->
+  <div class="ANISH-XD">
+    <p>XM9RTY ANISH HERE</p>
   </div>
 
  <style>
